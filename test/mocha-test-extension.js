@@ -20,6 +20,7 @@ describe('Bots', () => {
         const axios = 'axios/1.3.5';
         const jsdom = 'Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/20.0.3';
         const scrapy = 'Scrapy/1.5.0 (+https://scrapy.org)';
+        const botify = 'Mozilla/5.0 (compatible; botify; http://botify.com)';
 
         const botParser = new UAParser(Bots);
         assert.deepEqual(botParser.setUA(googleBot).getBrowser(), {name: "Googlebot-Video", version: "1.0", major: "1", type: "bot"});
@@ -27,6 +28,7 @@ describe('Bots', () => {
         assert.deepEqual(botParser.setUA(msnBot).getBrowser(), {name: "msnbot-media", version: "1.1", major: "1", type: "bot"});
         assert.deepEqual(botParser.setUA(bingPreview).getBrowser(), {name: "BingPreview", version: "1.0b", major: "1", type: "bot"});
         assert.deepEqual(botParser.setUA(opera).getBrowser(), {name: "Opera", version: "8.5", major: "8"});
+        assert.deepEqual(botParser.setUA(botify).getBrowser(), {name: "botify", version: undefined, major: undefined, type: "bot"});
 
         // try merging Bots & CLIs
         const botsAndCLIs = { browser : [...Bots.browser, ...CLIs.browser]};

@@ -21,7 +21,6 @@
     // Constants
     /////////////
 
-
     var LIBVERSION  = '2.0.0-beta.1',
         EMPTY       = '',
         UNKNOWN     = '?',
@@ -43,7 +42,7 @@
         WEARABLE    = 'wearable',
         EMBEDDED    = 'embedded',
         USER_AGENT  = 'user-agent',
-        UA_MAX_LENGTH = 350,
+        UA_MAX_LENGTH = 500,
         BRANDS      = 'brands',
         FORMFACTOR  = 'formFactor',
         FULLVERLIST = 'fullVersionList',
@@ -72,6 +71,7 @@
         BLACKBERRY  = 'BlackBerry',
         GOOGLE      = 'Google',
         HUAWEI      = 'Huawei',
+        LENOVO      = 'Lenovo',
         LG          = 'LG',
         MICROSOFT   = 'Microsoft',
         MOTOROLA    = 'Motorola',
@@ -87,9 +87,11 @@
         FIREFOX     = 'Firefox',
         OPERA       = 'Opera',
         FACEBOOK    = 'Facebook',
+        SOGOU       = 'Sogou',
         WINDOWS     = 'Windows';
    
-    var NAVIGATOR           = (typeof window !== UNDEF_TYPE && window.navigator) ? 
+    var isWindow            = typeof window !== UNDEF_TYPE,
+        NAVIGATOR           = (isWindow && window.navigator) ? 
                                 window.navigator : 
                                 undefined,
         NAVIGATOR_UADATA    = (NAVIGATOR && NAVIGATOR.userAgentData) ? 
@@ -121,12 +123,15 @@
                 }
                 return false;
             }
-            return typeof str1 === STR_TYPE ? lowerize(str2).indexOf(lowerize(str1)) !== -1 : false;
+            return isString(str1) ? lowerize(str2).indexOf(lowerize(str1)) !== -1 : false;
         },
         isExtensions = function (obj) {
             for (var prop in obj) {
                 return /^(browser|cpu|device|engine|os)$/.test(prop);
             }
+        },
+        isString = function (val) {
+            return typeof val === STR_TYPE;
         },
         itemListToArray = function (header) {
             if (!header) return undefined;
@@ -143,10 +148,10 @@
             return arr;
         },
         lowerize = function (str) {
-            return typeof(str) === STR_TYPE ? str.toLowerCase() : str;
+            return isString(str) ? str.toLowerCase() : str;
         },
         majorize = function (version) {
-            return typeof(version) === STR_TYPE ? strip(/[^\d\.]/g, version).split('.')[0] : undefined;
+            return isString(version) ? strip(/[^\d\.]/g, version).split('.')[0] : undefined;
         },
         setProps = function (arr) {
             for (var i in arr) {
@@ -160,15 +165,15 @@
             return this;
         },
         strip = function (pattern, str) {
-            return str.replace(pattern, EMPTY);
+            return isString(str) ? str.replace(pattern, EMPTY) : str;
         },
-        stripQuotes = function (val) {
-            return typeof val === STR_TYPE ? strip(/\\?\"/g, val) : val; 
+        stripQuotes = function (str) {
+            return strip(/\\?\"/g, str); 
         },
         trim = function (str, len) {
-            if (typeof(str) === STR_TYPE) {
+            if (isString(str)) {
                 str = strip(/^\s\s*/, str);
-                return typeof(len) === UNDEF_TYPE ? str : str.substring(0, UA_MAX_LENGTH);
+                return typeof len === UNDEF_TYPE ? str : str.substring(0, UA_MAX_LENGTH);
             }
     };
 
@@ -301,11 +306,12 @@
             ], [VERSION, [NAME, OPERA]], [
 
             // Mixed
+            /\bb[ai]*d(?:uhd|[ub]*[aekoprswx]{5,6})[\/ ]?([\w\.]+)/i            // Baidu
+            ], [VERSION, [NAME, 'Baidu']], [
             /(kindle)\/([\w\.]+)/i,                                             // Kindle
             /(lunascape|maxthon|netfront|jasmine|blazer)[\/ ]?([\w\.]*)/i,      // Lunascape/Maxthon/Netfront/Jasmine/Blazer
             // Trident based
-            /(avant |iemobile|slim)(?:browser)?[\/ ]?([\w\.]*)/i,               // Avant/IEMobile/SlimBrowser
-            /(ba?idubrowser)[\/ ]?([\w\.]+)/i,                                  // Baidu Browser
+            /(avant|iemobile|slim)\s?(?:browser)?[\/ ]?([\w\.]*)/i,             // Avant/IEMobile/SlimBrowser
             /(?:ms|\()(ie) ([\w\.]+)/i,                                         // Internet Explorer
 
             // Webkit/KHTML based                                               // Flock/RockMelt/Midori/Epiphany/Silk/Skyfire/Bolt/Iron/Iridium/PhantomJS/Bowser/QupZilla/Falkon
@@ -317,8 +323,7 @@
             /(?:\buc? ?browser|(?:juc.+)ucweb)[\/ ]?([\w\.]+)/i                 // UCBrowser
             ], [VERSION, [NAME, 'UCBrowser']], [
             /microm.+\bqbcore\/([\w\.]+)/i,                                     // WeChat Desktop for Windows Built-in Browser
-            /\bqbcore\/([\w\.]+).+microm/i
-            ], [VERSION, [NAME, 'WeChat(Win) Desktop']], [
+            /\bqbcore\/([\w\.]+).+microm/i,
             /micromessenger\/([\w\.]+)/i                                        // WeChat
             ], [VERSION, [NAME, 'WeChat']], [
             /konqueror\/([\w\.]+)/i                                             // Konqueror
@@ -327,6 +332,8 @@
             ], [VERSION, [NAME, 'IE']], [
             /ya(?:search)?browser\/([\w\.]+)/i                                  // Yandex
             ], [VERSION, [NAME, 'Yandex']], [
+            /slbrowser\/([\w\.]+)/i                                             // Smart Lenovo Browser
+            ], [VERSION, [NAME, 'Smart ' + LENOVO + SUFFIX_BROWSER]], [
             /(avast|avg)\/([\w\.]+)/i                                           // Avast/AVG Secure Browser
             ], [[NAME, /(.+)/, '$1 Secure' + SUFFIX_BROWSER], VERSION], [
             /\bfocus\/([\w\.]+)/i                                               // Firefox Focus
@@ -345,15 +352,20 @@
             ], [VERSION, [NAME, PREFIX_MOBILE + FIREFOX]], [
             /\bqihu|(qi?ho?o?|360)browser/i                                     // 360
             ], [[NAME, '360' + SUFFIX_BROWSER]], [
-            /(oculus|samsung|sailfish|huawei)browser\/([\w\.]+)/i
-            ], [[NAME, /(.+)/, '$1' + SUFFIX_BROWSER], VERSION], [               // Oculus/Samsung/Sailfish/Huawei Browser
+            /(oculus|sailfish|huawei|vivo)browser\/([\w\.]+)/i
+            ], [[NAME, /(.+)/, '$1' + SUFFIX_BROWSER], VERSION], [              // Oculus/Sailfish/HuaweiBrowser/VivoBrowser
+            /samsungbrowser\/([\w\.]+)/i                                        // Samsung Internet
+            ], [VERSION, [NAME, SAMSUNG + ' Internet']], [
             /(comodo_dragon)\/([\w\.]+)/i                                       // Comodo Dragon
             ], [[NAME, /_/g, ' '], VERSION], [
+            /metasr[\/ ]?([\d\.]+)/i                                            // Sogou Explorer
+            ], [VERSION, [NAME, SOGOU + ' Explorer']], [
+            /(sogou)mo\w+\/([\d\.]+)/i                                          // Sogou Mobile
+            ], [[NAME, SOGOU + ' Mobile'], VERSION], [
             /(electron)\/([\w\.]+) safari/i,                                    // Electron-based App
             /(tesla)(?: qtcarbrowser|\/(20\d\d\.[-\w\.]+))/i,                   // Tesla
-            /m?(qqbrowser|baiduboxapp|2345Explorer)[\/ ]?([\w\.]+)/i            // QQBrowser/Baidu App/2345 Browser
+            /m?(qqbrowser|2345Explorer)[\/ ]?([\w\.]+)/i                        // QQBrowser/2345 Browser
             ], [NAME, VERSION], [
-            /(metasr)[\/ ]?([\w\.]+)/i,                                         // SouGouBrowser
             /(lbbrowser)/i,                                                     // LieBao Browser
             /\[(linkedin)app\]/i                                                // LinkedIn App for iOS & Android
             ], [NAME], [
@@ -361,10 +373,12 @@
             // WebView
             /((?:fban\/fbios|fb_iab\/fb4a)(?!.+fbav)|;fbav\/([\w\.]+);)/i       // Facebook App for iOS & Android
             ], [[NAME, FACEBOOK], VERSION], [
+            /(Klarna)\/([\w\.]+)/i,                                             // Klarna Shopping Browser for iOS & Android
             /(kakao(?:talk|story))[\/ ]([\w\.]+)/i,                             // Kakao App
             /(naver)\(.*?(\d+\.[\w\.]+).*\)/i,                                  // Naver InApp
             /safari (line)\/([\w\.]+)/i,                                        // Line App for iOS
             /\b(line)\/([\w\.]+)\/iab/i,                                        // Line App for Android
+            /(alipay)client\/([\w\.]+)/i,                                       // Alipay
             /(chromium|instagram|snapchat)[\/ ]([-\w\.]+)/i                     // Chromium/Instagram/Snapchat
             ], [NAME, VERSION], [
             /\bgsa\/([\w\.]+) .*safari\//i                                      // Google Search Appliance on iOS
@@ -496,7 +510,7 @@
             /\b; (\w+) build\/hm\1/i,                                           // Xiaomi Hongmi 'numeric' models
             /\b(hm[-_ ]?note?[_ ]?(?:\d\w)?) bui/i,                             // Xiaomi Hongmi
             /\b(redmi[\-_ ]?(?:note|k)?[\w_ ]+)(?: bui|\))/i,                   // Xiaomi Redmi
-            /oid[^\)]+; (m?[12][0-389][01]\w{3,6}[c-y])( bui|\))/i,             // Xiaomi Redmi 'numeric' models
+            /oid[^\)]+; (m?[12][0-389][01]\w{3,6}[c-y])( bui|; wv|\))/i,        // Xiaomi Redmi 'numeric' models
             /\b(mi[-_ ]?(?:a\d|one|one[_ ]plus|note lte|max|cc)?[_ ]?(?:\d?\w?)[_ ]?(?:plus|se|lite)?)(?: bui|\))/i // Xiaomi Mi
             ], [[MODEL, /_/g, ' '], [VENDOR, XIAOMI], [TYPE, MOBILE]], [
             /oid[^\)]+; (2\d{4}(283|rpbf)[cgl])( bui|\))/i,                     // Redmi Pad
@@ -536,7 +550,7 @@
             // Lenovo
             /(ideatab[-\w ]+)/i,
             /lenovo ?(s[56]000[-\w]+|tab(?:[\w ]+)|yt[-\d\w]{6}|tb[-\d\w]{6})/i
-            ], [MODEL, [VENDOR, 'Lenovo'], [TYPE, TABLET]], [
+            ], [MODEL, [VENDOR, LENOVO], [TYPE, TABLET]], [
 
             // Nokia
             /(?:maemo|nokia).*(n900|lumia \d+)/i,
@@ -710,7 +724,7 @@
             // MIXED (GENERIC)
             ///////////////////
 
-            /droid .+?; ([^;]+?)(?: bui|\) applew).+? mobile safari/i           // Android Phones from Unidentified Vendors
+            /droid .+?; ([^;]+?)(?: bui|; wv\)|\) applew).+? mobile safari/i    // Android Phones from Unidentified Vendors
             ], [MODEL, [TYPE, MOBILE]], [
             /droid .+?; ([^;]+?)(?: bui|\) applew).+?(?! mobile) safari/i       // Android Tablets from Unidentified Vendors
             ], [MODEL, [TYPE, TABLET]], [
@@ -747,12 +761,12 @@
             // Windows
             /microsoft (windows) (vista|xp)/i                                   // Windows (iTunes)
             ], [NAME, VERSION], [
-            /(windows) nt 6\.2; (arm)/i,                                        // Windows RT
-            /(windows (?:phone(?: os)?|mobile))[\/ ]?([\d\.\w ]*)/i,            // Windows Phone
-            /(windows)[\/ ]?([ntce\d\. ]+\w)(?!.+xbox)/i
+            /(windows (?:phone(?: os)?|mobile))[\/ ]?([\d\.\w ]*)/i             // Windows Phone
             ], [NAME, [VERSION, strMapper, windowsVersionMap]], [
-            /(win(?=3|9|n)|win 9x )([nt\d\.]+)/i
-            ], [[NAME, WINDOWS], [VERSION, strMapper, windowsVersionMap]], [
+            /windows nt 6\.2; (arm)/i,                                        // Windows RT
+            /windows[\/ ]?([ntce\d\. ]+\w)(?!.+xbox)/i,
+            /(?:win(?=3|9|n)|win 9x )([nt\d\.]+)/i
+            ], [[VERSION, strMapper, windowsVersionMap], [NAME, WINDOWS]], [
 
             // iOS/macOS
             /ip[honead]{2,4}\b(?:.*os ([\w]+) like mac|; opera)/i,              // iOS
@@ -1182,7 +1196,7 @@
             ['getResult', createItemFunc(UA_RESULT)],
             ['getUA', function () { return userAgent; }],
             ['setUA', function (ua) {
-                if (typeof ua === STR_TYPE)
+                if (isString(ua))
                     userAgent = ua.length > UA_MAX_LENGTH ? trim(ua, UA_MAX_LENGTH) : ua;
                 return this;
             }]

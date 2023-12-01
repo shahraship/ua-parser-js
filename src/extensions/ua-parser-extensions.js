@@ -30,7 +30,10 @@ const Bots = Object.freeze({
         [/(gptbot)\/([\w\.]+)/i], [NAME, VERSION, [TYPE, 'bot']],
 
         // Slackbot - https://api.slack.com/robots
-        [/(slack(?:bot)?(?:-imgproxy|-linkexpanding)?) ([\w\.]+)/i], [NAME, VERSION, [TYPE, 'bot']]
+        [/(slack(?:bot)?(?:-imgproxy|-linkexpanding)?) ([\w\.]+)/i], [NAME, VERSION, [TYPE, 'bot']],
+
+        // Botify
+        [/(botify)/i], [NAME, VERSION, [TYPE, 'bot']]
     ]
 });
 
